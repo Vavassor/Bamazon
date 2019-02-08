@@ -1,5 +1,6 @@
 "use strict";
 
+const format = require("./terminal-format.js");
 const inquirer = require("inquirer");
 const mysql = require("mysql");
 
@@ -33,8 +34,12 @@ function askAboutPurchase(products) {
         name: "quantity",
         type: "input",
         validate: (value) => {
-          if (isNaN(parseInt(value))) {
+          const number = parseInt(value);
+          if (isNaN(number)) {
             return "Please enter an amount.";
+          }
+          if (number <= 0) {
+            return "Please enter a positive amount.";
           }
           return true;
         },
@@ -53,22 +58,6 @@ function askAboutPurchase(products) {
     });
 }
 
-function ellipsize(string, limit) {
-  if (string.length > limit) {
-    return string.substring(0, limit - 1) + "…";
-  } else {
-    return string;
-  }
-}
-
-function formatDollars(amount) {
-  return amount.toLocaleString("en-us", {style: "currency", currency: "USD"});
-}
-
-function limitColumns(string, limit) {
-  return ellipsize(string, limit).padEnd(limit);
-}
-
 function printProducts(response) {
   let result = "\n";
   
@@ -76,9 +65,9 @@ function printProducts(response) {
   result += "--- ------------------------------------- -------\n"
 
   for (const product of response) {
-    result += limitColumns(product["item_id"].toString(), 2) + " | ";
-    result += limitColumns(product["product_name"], 35) + " | "
-    result += limitColumns(formatDollars(product["price"]), 6) + "\n";
+    result += format.limitColumns(product["item_id"].toString(), 2) + " | ";
+    result += format.limitColumns(product["product_name"], 35) + " | "
+    result += format.limitColumns(format.formatDollars(product["price"]), 6) + "\n";
   }
 
   console.log(result);
@@ -87,17 +76,17 @@ function printProducts(response) {
 function purchase(id, quantity, price, productName) {
   connection.query(
     "UPDATE products SET stock_quantity = stock_quantity - ? WHERE item_id = ? AND stock_quantity > 0",
-    [quantity, id, quantity],
+    [quantity, id],
     (error, response) => {
       if (error) {
         throw error;
       }
 
       if (response.affectedRows === 0) {
-        console.error("Insufficient quantity!");
+        console.log("Insufficient quantity!");
       } else {
         let result = "\n"
-        result += "Total: " + formatDollars(quantity * price) + "\n";
+        result += "Total: " + format.formatDollars(quantity * price) + "\n";
         result += "Purchase: " + quantity + " × " + productName;
         console.log(result);
       }
