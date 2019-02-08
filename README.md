@@ -1,2 +1,3 @@
-# Bamazon
+# 🅱amazon
+
 Mock Storefront CLI app
