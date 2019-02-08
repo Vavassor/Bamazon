@@ -1,10 +1,12 @@
 "use strict";
 
-const format = require("./terminal-format.js");
 const inquirer = require("inquirer");
 const mysql = require("mysql");
+const tableFormat = require("./table-format.js");
+const validator = require("./validator.js");
 
 let connection;
+
 
 function addNewProduct() {
   inquirer
@@ -24,20 +26,14 @@ function addNewProduct() {
         message: "Enter the price.",
         name: "price",
         type: "input",
-        validate: (value) => {
-          const number = parseFloat(value);
-          if (isNaN(number) || number <= 0) {
-            return "Please enter a price.";
-          }
-          return true;
-        },
+        validate: validator.validatePrice,
       },
       {
         filter: value => parseInt(value),
         message: "Enter the initial stock quantity.",
         name: "stockQuantity",
         type: "input",
-        validate: validateQuantity,
+        validate: validator.validateQuantity,
       },
     ])
     .then((response) => {
@@ -72,20 +68,14 @@ function addToInventory() {
         message: "Enter the item ID.",
         name: "id",
         type: "input",
-        validate: (value) => {
-          const number = parseInt(value);
-          if (isNaN(number)) {
-            return "Please enter a valid product ID.";
-          }
-          return true;
-        },
+        validate: validator.validateId,
       },
       {
         filter: value => parseInt(value),
         message: "Enter the quantity to add.",
         name: "quantity",
         type: "input",
-        validate: validateQuantity,
+        validate: validator.validateQuantity,
       },
     ])
     .then((response) => {
@@ -94,20 +84,24 @@ function addToInventory() {
 }
 
 function printProducts(products) {
-  let result = "\n";
+  const columns = [
+    {name: "ID", width: 2},
+    {name: "Product Name", width: 35},
+    {name: "Price", width: 6},
+    {name: "Quantity", width: 5},
+  ];
 
-  result += "ID | Product Name                        | Price  | Quantity\n";
-  result += "--- ------------------------------------- -------- ---------";
+  const rows = products.map((product) => {
+    const row = [
+      product["item_id"].toString(),
+      product["product_name"],
+      tableFormat.formatDollars(product["price"]),
+      product["stock_quantity"].toString(),
+    ];
+    return row;
+  });
 
-  for (const product of products) {
-    result += "\n";
-    result += format.limitColumns(product["item_id"].toString(), 2) + " | ";
-    result += format.limitColumns(product["product_name"], 35) + " | ";
-    result += format.limitColumns(format.formatDollars(product["price"]), 6) + " | ";
-    result += format.limitColumns(product["stock_quantity"].toString(), 5);
-  }
-
-  console.log(result);
+  console.log(tableFormat.makeTable(columns, rows));
 }
 
 function requestAction() {
@@ -170,17 +164,6 @@ function requestAddProduct(productName, departmentName, price, stockQuantity) {
   );
 }
 
-function validateQuantity(value) {
-  const number = parseInt(value);
-  if (isNaN(number)) {
-    return "Please enter a quantity.";
-  }
-  if (number <= 0) {
-    return "Please enter a positive quantity.";
-  }
-  return true;
-}
-
 function viewLowInventory() {
   connection.query(
     "SELECT item_id, product_name, price, stock_quantity FROM products WHERE stock_quantity < 5",
@@ -210,9 +193,6 @@ function viewProductsForSale() {
     }
   );
 }
-
-
-
 
 
 connection = mysql.createConnection({

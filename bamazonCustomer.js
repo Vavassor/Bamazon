@@ -1,8 +1,9 @@
 "use strict";
 
-const format = require("./terminal-format.js");
 const inquirer = require("inquirer");
 const mysql = require("mysql");
+const tableFormat = require("./table-format.js");
+const validator = require("./validator.js");
 
 let connection;
 
@@ -14,39 +15,24 @@ function askAboutPurchase(products) {
         message: "Enter the product ID of the item for purchase.",
         name: "id",
         type: "input",
-        validate: (value) => {
-          const number = parseInt(value);
-          if (isNaN(number)) {
-            return "Please enter a valid product ID.";
-          }
-
-          const found = products.some(product => product["item_id"] === number);
-          if (!found) {
-            return "Please enter a valid product ID.";
-          }
-
-          return true;
-        },
+        validate: validator.validateId,
       },
       {
         filter: value => parseInt(value),
         message: "How many would you like to purchase?",
         name: "quantity",
         type: "input",
-        validate: (value) => {
-          const number = parseInt(value);
-          if (isNaN(number)) {
-            return "Please enter an amount.";
-          }
-          if (number <= 0) {
-            return "Please enter a positive amount.";
-          }
-          return true;
-        },
+        validate: validator.validateQuantity,
       },
     ])
     .then((response) => {
       const product = products.find(product => product["item_id"] === response.id);
+
+      if (!product) {
+        console.log("\nItem ID " + response.id + " was not found.");
+        connection.end();
+        return;
+      }
 
       if (product["stock_quantity"] < response.quantity) {
         console.log("Insufficient quantity!");
@@ -58,25 +44,31 @@ function askAboutPurchase(products) {
     });
 }
 
-function printProducts(response) {
-  let result = "\n";
-  
-  result += "ID | Product Name                        | Price \n"
-  result += "--- ------------------------------------- -------\n"
+function printProducts(products) {
+  const columns = [
+    {name: "ID", width: 2},
+    {name: "Product Name", width: 35},
+    {name: "Price", width: 6},
+  ];
 
-  for (const product of response) {
-    result += format.limitColumns(product["item_id"].toString(), 2) + " | ";
-    result += format.limitColumns(product["product_name"], 35) + " | "
-    result += format.limitColumns(format.formatDollars(product["price"]), 6) + "\n";
-  }
+  const rows = products.map((product) => {
+    const row = [
+      product["item_id"].toString(),
+      product["product_name"],
+      tableFormat.formatDollars(product["price"]),
+    ];
+    return row;
+  });
 
-  console.log(result);
+  console.log(tableFormat.makeTable(columns, rows));
 }
 
 function purchase(id, quantity, price, productName) {
+  const total = quantity * price;
+  
   connection.query(
-    "UPDATE products SET stock_quantity = stock_quantity - ? WHERE item_id = ? AND stock_quantity > 0",
-    [quantity, id],
+    "UPDATE products SET stock_quantity = stock_quantity - ?, product_sales = product_sales + ? WHERE item_id = ? AND stock_quantity > 0",
+    [quantity, total, id],
     (error, response) => {
       if (error) {
         throw error;
@@ -86,7 +78,7 @@ function purchase(id, quantity, price, productName) {
         console.log("Insufficient quantity!");
       } else {
         let result = "\n"
-        result += "Total: " + format.formatDollars(quantity * price) + "\n";
+        result += "Total: " + tableFormat.formatDollars(total) + "\n";
         result += "Purchase: " + quantity + " × " + productName;
         console.log(result);
       }
