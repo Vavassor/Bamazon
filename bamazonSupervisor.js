@@ -32,6 +32,8 @@ function printDepartments(departments) {
     {name: "ID", width: 2},
     {name: "Department Name", width: 15},
     {name: "Overhead Costs", width: 15},
+    {name: "Total Sales", width: 15},
+    {name: "Total Profit", width: 15},
   ];
 
   const rows = departments.map((department) => {
@@ -39,6 +41,8 @@ function printDepartments(departments) {
       department["department_id"].toString(),
       department["department_name"],
       tableFormat.formatDollars(department["overhead_costs"]),
+      tableFormat.formatDollars(department["total_sales"]),
+      tableFormat.formatDollars(department["total_profit"]),
     ];
     return row;
   });
@@ -50,7 +54,11 @@ function requestAction() {
   inquirer
     .prompt([
       {
-        choices: ["View Product Sales by Department", "Create New Department", "Exit"],
+        choices: [
+          "View Product Sales by Department",
+          "Create New Department",
+          "Exit"
+        ],
         message: "What would you like to do?",
         name: "action",
         type: "list",
@@ -92,7 +100,16 @@ function requestNewDepartment(departmentName, overheadCosts) {
 
 function viewProductSalesByDepartment() {
   connection.query(
-    "SELECT department_id, department_name, overhead_costs FROM departments",
+    `SELECT
+      departments.department_id,
+      departments.department_name,
+      departments.overhead_costs,
+      SUM(products.product_sales) AS total_sales,
+      SUM(products.product_sales) - departments.overhead_costs AS total_profit
+    FROM departments
+    INNER JOIN products ON products.department_name = departments.department_name
+    GROUP BY departments.department_id
+    ORDER BY departments.department_id;`,
     (error, response) => {
       if (error) {
         throw error;
