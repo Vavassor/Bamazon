@@ -1,7 +1,7 @@
 INSERT INTO products (product_name, department_name, price, stock_quantity, product_sales)
 VALUES
 	("100% Whole Wheat Bread - 20oz", "Bakery", 2.99, 40, 7000),
-    ("Jewish Seedless Rye Bread - 16oz", "Bakery", 3.79, 10, 3000),
+    ("Jewish Seedless Rye Bread - 16oz", "Bakery", 3.79, 4, 3000),
     ("Dutch Country Premium Potato Bread - 22oz", "Bakery", 2.99, 10, 2000),
     ("Oranges - Navel - Medium - 1 each", "Produce", 0.79, 200, 4000),
     ("Potatoes - Sweet / Yams", "Produce", 0.87, 300, 6000),

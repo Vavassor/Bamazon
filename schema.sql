@@ -9,7 +9,7 @@ CREATE TABLE products (
     department_name VARCHAR(50) NOT NULL,
     price DECIMAL(13, 4) NOT NULL,
     stock_quantity INTEGER NOT NULL,
-    product_sales DECIMAL(13, 4) NOT NULL
+    product_sales DECIMAL(13, 4) NOT NULL DEFAULT 0
 );
 
 CREATE TABLE departments (

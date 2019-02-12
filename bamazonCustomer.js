@@ -60,14 +60,20 @@ function printProducts(products) {
     return row;
   });
 
-  console.log(tableFormat.makeTable(columns, rows));
+  console.log("\n" + tableFormat.makeTable(columns, rows) + "\n");
 }
 
 function purchase(id, quantity, price, productName) {
   const total = quantity * price;
   
   connection.query(
-    "UPDATE products SET stock_quantity = stock_quantity - ?, product_sales = product_sales + ? WHERE item_id = ? AND stock_quantity > 0",
+    `UPDATE products
+    SET
+      stock_quantity = stock_quantity - ?,
+      product_sales = product_sales + ?
+    WHERE
+      item_id = ?
+      AND stock_quantity > 0`,
     [quantity, total, id],
     (error, response) => {
       if (error) {

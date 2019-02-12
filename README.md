@@ -13,6 +13,8 @@ It runs in [Node.js](https://nodejs.org) and uses [MySQL](https://www.mysql.com/
 
 This lists available products and allows a user to order an item.
 
+![Customer View Screenshot](images/Demo-Customer.png)
+
 ## Manager
 
 This gives a few available commands for a prospective manager.
@@ -22,9 +24,21 @@ This gives a few available commands for a prospective manager.
 - Add to Inventory
 - Add New Product
 
+![View Products For Sale Screenshot](images/Demo-Manager-View-Products-For-Sale.png)
+
+![View Low Inventory Screenshot](images/Demo-Manager-View-Low-Inventory.png)
+
+![Add To Inventory Screenshot](images/Demo-Manager-Add-To-Inventory.png)
+
+![Add New Product Screenshot](images/Demo-Manager-Add-New-Product.png)
+
 ## Supervisor
 
 This provides a few services for a supervisor.
 
 - View Product Sales by Department
 - Create New Department
+
+![View Department Sales Screenshot](images/Demo-Supervisor-View-Department-Sales.png)
+
+![Create New Department Screenshot](images/Demo-Supervisor-Create-New-Department.png)
